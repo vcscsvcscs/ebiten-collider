@@ -9,12 +9,13 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	evector "github.com/hajimehoshi/ebiten/v2/vector"
 	vector "github.com/melonfunction/ebiten-vector"
 )
 
 // Vars
 var (
-	ErrShapeNotFound = errors.New("Couldn't remove shape from SpatialHash; not found")
+	ErrShapeNotFound = errors.New("couldn't remove shape from SpatialHash; not found")
 )
 
 // Shape interface. It's probably not needed but it keeps code more readable.
@@ -158,7 +159,7 @@ func collisionRectRect(r1, r2 *RectangleShape) *vector.Vector {
 	if !(((r1Right >= r2Left && r1Right <= r2Right) || (r1Left >= r2Left && r1Left <= r2Right) || (r1Left >= r2Left && r1Right <= r2Right) || (r2Left >= r1Left && r2Right <= r1Right)) &&
 		((r1Up <= r2Down && r1Up >= r2Up) || (r1Down <= r2Down && r1Down >= r2Up) || (r1Up >= r2Up && r1Down <= r2Down) || (r2Up >= r1Up && r2Down <= r1Down))) {
 
-		return &vector.Vector{0, 0}
+		return &vector.Vector{X: 0, Y: 0}
 	}
 
 	var dx, dy float64
@@ -178,7 +179,7 @@ func collisionRectRect(r1, r2 *RectangleShape) *vector.Vector {
 	} else {
 		dx = 0
 	}
-	return &vector.Vector{dx, dy}
+	return &vector.Vector{X: dx, Y: dy}
 }
 
 func collisionRectCirc(r1 *RectangleShape, c1 *CircleShape) *vector.Vector {
@@ -238,7 +239,7 @@ func collisionCircCirc(c1, c2 *CircleShape) *vector.Vector {
 	dist := c1.Pos.Sub(c2.Pos)
 	depth := c1.Radius + c2.Radius - dist.Length()
 	if depth < 0 {
-		return &vector.Vector{0, 0}
+		return &vector.Vector{X: 0, Y: 0}
 	}
 
 	return dist.Normalize().Mult(depth)
@@ -291,12 +292,12 @@ func (s *SpatialHash) CheckCollisions(shape Shape) []CollisionData {
 // Draw is a debug function. It draws a rectangle for every cell which has had a shape in it at some point.
 func (s *SpatialHash) Draw(surface *ebiten.Image) {
 	for pos, cell := range s.Hash {
-		x, y, w := float64(pos.X*s.CellSize), float64(pos.Y*s.CellSize), float64(s.CellSize)
+		x, y, w := float32(pos.X*s.CellSize), float32(pos.Y*s.CellSize), float32(s.CellSize)
 		color := color.RGBA{255, 255, 255, 255}
-		ebitenutil.DrawLine(surface, x, y, x+w, y, color)
-		ebitenutil.DrawLine(surface, x, y, x, y+w, color)
-		ebitenutil.DrawLine(surface, x, y+w, x+w, y+w, color)
-		ebitenutil.DrawLine(surface, x+w, y, x+w, y+w, color)
+		evector.StrokeLine(surface, x, y, x+w, y, 2, color, true)
+		evector.StrokeLine(surface, x, y, x, y+w, 2, color, true)
+		evector.StrokeLine(surface, x, y+w, x+w, y+w, 2, color, true)
+		evector.StrokeLine(surface, x+w, y, x+w, y+w, 2, color, true)
 
 		ebitenutil.DebugPrintAt(surface, fmt.Sprintf("%d", len(cell.Shapes)), pos.X*s.CellSize, pos.Y*s.CellSize)
 	}
@@ -305,7 +306,7 @@ func (s *SpatialHash) Draw(surface *ebiten.Image) {
 // NewCircleShape creates, then adds a new CircleShape to the hash before returning it
 func (s *SpatialHash) NewCircleShape(x, y, r float64) *CircleShape {
 	ci := &CircleShape{
-		Pos:    &vector.Vector{x, y},
+		Pos:    &vector.Vector{X: x, Y: y},
 		Radius: r,
 	}
 	s.Add(ci)
@@ -366,7 +367,7 @@ func (ci *CircleShape) GetParent() interface{} {
 // NewRectangleShape creates, then adds a new RectangleShape to the hash before returning it
 func (s *SpatialHash) NewRectangleShape(x, y, w, h float64) *RectangleShape {
 	re := &RectangleShape{
-		Pos:    &vector.Vector{x, y},
+		Pos:    &vector.Vector{X: x, Y: y},
 		Width:  w,
 		Height: h,
 	}
